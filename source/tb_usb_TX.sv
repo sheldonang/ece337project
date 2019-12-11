@@ -1,0 +1,308 @@
+// $Id: $
+// File name:   tb_usb_TX.sv
+
+`timescale 1ns / 10ps
+
+module tb_usb_TX();
+
+  // Define parameters
+  parameter CLK_PERIOD        = 2.5;
+  parameter NORM_DATA_PERIOD  = (10 * CLK_PERIOD);
+  
+  localparam OUTPUT_CHECK_DELAY = (CLK_PERIOD - 0.2);
+  localparam WORST_FAST_DATA_PERIOD = (NORM_DATA_PERIOD * 0.96);
+  localparam WORST_SLOW_DATA_PERIOD = (NORM_DATA_PERIOD * 1.04);
+  
+  //  DUT inputs
+  reg tb_clk;
+  reg tb_n_rst;
+  reg [7:0] tb_TX_packet_data; 
+  reg [6:0] tb_TX_packet_data_size; 
+  reg [1:0] tb_TX_packet;
+  
+  // DUT outputs
+ reg tb_get_TX_packet_data; 
+ reg tb_Dminus_out; 
+ reg tb_Dplus_out; 
+ reg tb_busy;
+
+  // Test bench debug signals
+  integer tb_test_num;
+  string  tb_test_case;
+
+  // Test case expected output values for the test case
+  reg tb_expected_get_TX_packet_data;
+  reg tb_expected_Dminus_out;
+  reg tb_expected_Dplus_out;
+  reg tb_expected_busy;
+    
+    // DUT portmap
+  usb_TX DUT
+  (
+    .clk(tb_clk),
+    .n_rst(tb_n_rst),
+    .TX_packet_data(tb_TX_packet_data), 
+    .TX_packet_data_size(tb_TX_packet_data_size),
+    .TX_packet(tb_TX_packet),
+    .get_TX_packet_data(tb_get_TX_packet_data),
+    .Dminus_out(tb_Dminus_out),
+    .Dplus_out(tb_Dplus_out), 
+    .busy(tb_busy)
+
+  );
+  
+  // Tasks for regulating the timing of input stimulus to the design
+//  task send_packet;
+//    input  [7:0] data;
+//    input  stop_bit;
+//    input  time data_period;
+    
+//    integer i;
+//  begin
+//    // First synchronize to away from clock's rising edge
+//    @(negedge tb_clk)
+//    
+ //   // Send start bit
+//  /  tb_serial_in = 1'b0;
+//    #data_period;
+ //   
+    // Send data bits
+//    for(i = 0; i < 8; i = i + 1)
+//    begin
+//      tb_serial_in = data[i];
+//      #data_period;
+//    end
+    
+    // Send stop bit
+//    tb_serial_in = stop_bit;
+//    #data_period;
+//  end
+//  endtask
+  
+  task reset_dut;
+  begin
+    // Activate the design's reset (does not need to be synchronize with clock)
+   tb_n_rst = 1'b0;
+    
+    // Wait for a couple clock cycles
+    @(posedge tb_clk);
+    @(posedge tb_clk);
+    
+    // Release the reset
+    @(negedge tb_clk);
+    tb_n_rst = 1;
+    @(posedge tb_clk);
+    
+  end
+  endtask
+//  
+//  task check_outputs;
+//    input assert_data_read;
+// begin
+    // Don't need to syncrhonize relative to clock edge for this design's outputs since they should have been stable for quite a while given the 2 Data Period gap between the end of the packet and when this should be used to check the outputs
+    
+    // Data recieved should match the data sent
+//    assert(tb_expected_rx_data == tb_rx_data)
+//      $info("Test case %0d: Test data correctly received", tb_test_num);
+//    else
+//      $error("Test case %0d: Test data was not correctly received", tb_test_num);
+      
+    // If and only if a proper stop bit is sent ('1') there shouldn't be a framing error.
+//    assert(tb_expected_framing_error == tb_framing_error)
+//      $info("Test case %0d: DUT correctly shows no framing error", tb_test_num);
+//    else
+//      $error("Test case %0d: DUT incorrectly shows a framing error", tb_test_num);
+    
+    // If and only if a proper stop bit is sent ('1') should there be 'data ready'
+//    assert(tb_expected_data_ready == tb_data_ready)
+//      $info("Test case %0d: DUT correctly asserted the data ready flag", tb_test_num);
+//    else
+//      $error("Test case %0d: DUT did not correctly assert the data ready flag", tb_test_num);
+      
+    // Check for the proper overrun error state for this test case
+//    if(1'b0 == tb_expected_overrun)
+//    begin
+//      assert(1'b0 == tb_overrun_error)
+//        $info("Test case %0d: DUT correctly shows no overrun error", tb_test_num);
+//      else
+//        $error("Test case %0d: DUT incorrectly shows an overrun error", tb_test_num);
+//    end
+//    else
+//    begin
+//      assert(1'b1 == tb_overrun_error)
+//        $info("Test case %0d: DUT correctly shows an overrun error", tb_test_num);
+//      else
+//        $error("Test case %0d: DUT incorrectly shows no overrun error", tb_test_num);
+ //   end
+//    
+    // Handle the case of the test case asserting the data read signal
+//    if(1'b1 == assert_data_read)
+//    begin
+//      // Test case is supposed to have data read asserted -> check for proper handling
+      // Should synchronize away from rising edge of clock for asserting this input.
+//      @(negedge tb_clk);
+//      
+      // Activate the data read input 
+//      tb_data_read <= 1'b1;
+      
+      // Wait a clock cycle before checking for the flag to clear
+//      @(negedge tb_clk);
+//      tb_data_read <= 1'b0;
+      
+      // Check to see if the data ready flag cleared
+//      assert(1'b0 == tb_data_ready)
+//        $info("Test case %0d: DUT correctly cleared the data ready flag", tb_test_num);
+//      else
+//        $error("Test case %0d: DUT did not correctly clear the data ready flag", tb_test_num);
+//    end
+//  end
+//  endtask
+  
+  always
+  begin : CLK_GEN
+    tb_clk = 1'b0;
+    #(CLK_PERIOD / 2);
+    tb_clk = 1'b1;
+    #(CLK_PERIOD / 2);
+  end
+
+  // Actual test bench process
+  initial
+  begin : TEST_PROC
+
+    #0.5; 
+    
+    // Test case 0: Basic Power on Reset
+    tb_test_num  = 0;
+    tb_test_case = "Power-on-Reset";
+
+    tb_n_rst = 1'b1;
+    tb_TX_packet_data = 8'b00000000; 
+    tb_TX_packet_data_size = 7'b0000000; 
+    tb_TX_packet = 2'b11;
+    
+    tb_expected_get_TX_packet_data = 1'b0;
+    tb_expected_Dplus_out = 1'b1;
+    tb_expected_Dminus_out = 1'b0;
+    tb_expected_busy = 1'b0;
+
+    reset_dut;
+
+//Test case 1: ACK Check             // ACK = 00, NACK = 01, DATA = 10, IDLE = 11
+
+    #0.5
+    tb_test_num  = tb_test_num + 1;
+    tb_test_case = "ACK Check";
+
+    tb_n_rst = 1'b1;
+    tb_TX_packet_data = 8'b00000000; 
+    tb_TX_packet_data_size = 7'b0000000; 
+    tb_TX_packet = 2'b00;
+    
+    tb_expected_get_TX_packet_data = 1'b0;
+    tb_expected_Dplus_out = 1'b1;
+    tb_expected_Dminus_out = 1'b0;
+    tb_expected_busy = 1'b0;
+    #(CLK_PERIOD * 200);
+
+	//Test case 2: NACK Check
+    
+    #0.5
+    tb_test_num  = tb_test_num + 1;
+    tb_test_case = "NACK Check";
+    tb_n_rst = 1'b1;
+    tb_TX_packet_data = 8'b00000000; 
+    tb_TX_packet_data_size = 7'b0000000; 
+    tb_TX_packet = 2'b01; 
+    reset_dut;
+    tb_expected_get_TX_packet_data = 1'b0;
+    tb_expected_Dplus_out = 1'b1;
+    tb_expected_Dminus_out = 1'b0;
+    tb_expected_busy = 1'b0;
+    #(CLK_PERIOD * 200);
+
+	//Test case 3: DATA 1 Byte Check
+    
+    #0.5
+    tb_test_num  = tb_test_num + 1;
+    tb_test_case = "DATA 1 Byte Check";
+    tb_n_rst = 1'b1;
+    tb_TX_packet_data = 8'b11001100; 
+    //tb_TX_packet_data = 8'b10101011;
+    tb_TX_packet_data_size = 7'b0000001; 
+    tb_TX_packet = 2'b10; 
+    reset_dut;
+    #(CLK_PERIOD * 500);
+
+
+	//Test case 4: DATA 2 Byte Check
+    
+    #0.5
+    tb_test_num  = tb_test_num + 1;
+    tb_test_case = "DATA 2 Byte Check";
+    tb_n_rst = 1'b1;
+    tb_TX_packet_data = 8'b11001101; 
+    tb_TX_packet_data_size = 7'd2; 
+    tb_TX_packet = 2'b10; 
+    reset_dut;
+    
+    @(posedge tb_get_TX_packet_data);
+    @(posedge tb_get_TX_packet_data);
+    tb_TX_packet_data = 8'b00000001;
+    
+    #(CLK_PERIOD * 500);
+    
+	//Test case 5: DATA 4 Byte Check
+    
+    #0.5
+    tb_test_num  = tb_test_num + 1;
+    tb_test_case = "DATA 4 Byte Check";
+    tb_n_rst = 1'b1;
+    tb_TX_packet_data = 8'b11001101; 
+    tb_TX_packet_data_size = 7'd4; 
+    tb_TX_packet = 2'b10; 
+    reset_dut;
+    
+    @(posedge tb_get_TX_packet_data);
+    @(posedge tb_get_TX_packet_data);
+    tb_TX_packet_data = 8'b00000001;
+   @(posedge tb_get_TX_packet_data);
+    tb_TX_packet_data = 8'b00000010;
+    @(posedge tb_get_TX_packet_data);
+    tb_TX_packet_data = 8'b00000011;
+ 
+    #(CLK_PERIOD * 500); 
+
+	//Test case 6: Test Bit Stuffer Functionality with 1 Byte Data
+    
+    #0.5
+    tb_test_num  = tb_test_num + 1;
+    tb_test_case = "Bit Stuffer Functionality 1 Byte";
+    tb_n_rst = 1'b1;
+    tb_TX_packet_data = 8'b11111111; 
+    tb_TX_packet_data_size = 7'd1; 
+    tb_TX_packet = 2'b10; 
+    reset_dut;
+   
+    #(CLK_PERIOD * 500); 
+
+	//Test case 7: Test Bit Stuffer Functionality with 2 Byte Data
+    
+    #0.5
+    tb_test_num  = tb_test_num + 1;
+    tb_test_case = "Bit Stuffer Functionality 2 Byte";
+    tb_n_rst = 1'b1;
+    tb_TX_packet_data = 8'b11111111; 
+    tb_TX_packet_data_size = 7'd2; 
+    tb_TX_packet = 2'b10; 
+    reset_dut;
+   
+    @(posedge tb_get_TX_packet_data);
+    @(posedge tb_get_TX_packet_data);
+    tb_TX_packet_data = 8'b00011111;
+
+    #(CLK_PERIOD * 100); 
+
+    end
+
+endmodule

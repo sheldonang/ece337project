@@ -1,0 +1,166 @@
+//module CRC_generator_TX
+//(
+//  input wire clk,
+//  input wire n_rst,
+//  input wire clear_crc,
+//  input wire rollover_flag3,
+//  input wire sts_serial_out,
+//  output reg [15:0] crc_out,
+//  output reg crc_flag
+//);
+//  parameter IDLE = 0;
+//  parameter CRC_GEN = 1;
+
+//  wire msb = sts_serial_out;
+//  reg state, nxtstate;
+//  reg [15:0] nxtcrc_out;
+//  reg [5:0] tracker, nxttracker;
+
+ // always_ff @(posedge clk, negedge n_rst) begin
+ //   if (!n_rst) begin////////////////problem here
+ //      state <= IDLE;
+//       crc_out <= 16'hffff;
+//       tracker <= 47;
+ //   end
+ //   else if (clear_crc) begin////////////////problem here
+ //      state <= IDLE;
+ //      crc_out <= 16'hffff;
+  //     tracker <= 47;
+//    end
+ //   else begin
+//       state <= nxtstate;
+ //      crc_out <= nxtcrc_out;
+ //      tracker <= nxttracker;
+ //   end
+ // end
+
+ // assign crc_flag = (tracker == 0);
+
+ // always_comb begin: Next_state
+ //   nxtstate = state;
+ //   nxtcrc_out = crc_out;
+ //   nxttracker = tracker;
+ //   case (state)
+ //     IDLE: begin
+   //     if (rollover_flag3 == 1) begin
+ //         nxtstate = CRC_GEN;
+ //       end
+ //       nxtcrc_out = 16'hffff;
+ //       nxttracker = 47;
+ //     end
+ //     CRC_GEN: begin
+ //       nxtcrc_out[15] = nxtcrc_out[14] ^ nxtcrc_out[15] ^ msb;
+ //       nxtcrc_out[14:3] = nxtcrc_out[13:2];
+ //       nxtcrc_out[2] = nxtcrc_out[1] ^ nxtcrc_out[15] ^ msb;
+ //       nxtcrc_out[1] = nxtcrc_out[0];
+ //       nxtcrc_out[0] = nxtcrc_out[15] ^ msb;
+ //       nxttracker = nxttracker - 1;
+  //      if (tracker == 1) begin
+ //         nxtstate = IDLE;
+ //       end
+ //     end
+ //   endcase
+//  end
+
+//endmodule
+
+
+
+//module CRC_generator_TX
+//(
+//  input wire clk,
+//  input wire n_rst,
+//  input wire clear_crc,
+//  input wire rollover_flag3,
+//  input wire sts_serial_out, // msb 1st
+//  output reg [15:0] crc_out,
+//  output reg crc_flag
+//);
+//  parameter IDLE = 0;
+//  parameter CRC_GEN = 1;
+
+//  reg state = 0;
+
+//  always_ff @(posedge clk, negedge n_rst) begin
+//    case (state)
+//      IDLE: begin
+//        if (n_rst != 1'b0) begin
+//          state <= CRC_GEN;
+//        end
+//        else begin
+//          state <= IDLE;
+//        end
+//        crc_out <= 16'hffff;
+//      end
+//     CRC_GEN: begin
+//        crc_out[15] <= crc_out[14] ^ crc_out[15] ^ sts_serial_out;
+//       crc_out[14:3] <= crc_out[13:2];
+//        crc_out[2] <= crc_out[1] ^ crc_out[15] ^ sts_serial_out;
+//        crc_out[1] <= crc_out[0];
+//        crc_out[0] <= crc_out[15] ^ sts_serial_out;
+//	crc_flag <= 1'b0;
+//        if (rollover_flag3 == 1) begin
+//        state <= IDLE;
+//	  crc_out <= ~crc_out;
+//	  crc_flag <= 1'b1;
+//        end
+//        else begin
+//          state <= CRC_GEN;
+//        end
+//      end
+//    endcase
+//  end
+
+  //assign crc_flag = (rollover_flag3 == 1);
+
+//endmodule
+
+module CRC_generator_TX
+(
+  input wire clk,
+  input wire n_rst,
+  input wire clear_crc,
+  input wire rollover_flag3,
+  input wire sts_serial_out, // msb 1st
+  input wire enable,
+  output reg [15:0] crc_out,
+  output reg crc_flag
+);
+reg [15:0] next_crc_out;
+
+always_ff @ (posedge clk, negedge n_rst) begin 
+	if (!n_rst) begin 
+		crc_out <= '1;
+	end 	
+	else begin
+		crc_out <= next_crc_out;
+	end 
+
+end 
+
+always_comb begin
+	next_crc_out = crc_out; 
+	crc_flag = '0;
+
+	if (clear_crc) begin
+		next_crc_out = '1;
+	end 
+	//else if (rollover_flag3) begin
+	//	next_crc_out = ~crc_out;
+	//	crc_flag = 1;
+	//end 
+	else if (enable) begin
+		next_crc_out[15] = crc_out[14] ^ crc_out[15] ^ sts_serial_out;
+        	next_crc_out[14:3] = crc_out[13:2];
+        	next_crc_out[2] = crc_out[1] ^ crc_out[15] ^ sts_serial_out;
+        	next_crc_out[1] = crc_out[0];
+        	next_crc_out[0] = crc_out[15] ^ sts_serial_out;
+	end 	
+	else if(rollover_flag3) begin
+		next_crc_out = !crc_out; 
+		crc_flag = 1;
+	end
+ 
+end 
+
+endmodule 
